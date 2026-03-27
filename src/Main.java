@@ -26,5 +26,9 @@ public class Main {
         list2.print();
         list2.compareDeleteAllOf(student -> student.isStudentByID(3));
         list2.print();
+
+        for(Student st : list2){
+            System.out.println(st);
+        }
     }
 }

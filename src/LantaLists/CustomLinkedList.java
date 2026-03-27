@@ -1,6 +1,7 @@
 package LantaLists;
 
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.function.Predicate;
 public class CustomLinkedList<T> implements Iterable<T> {
     CustomNode<T> headNode;
@@ -38,32 +39,35 @@ public class CustomLinkedList<T> implements Iterable<T> {
         return headNode.value();
     }
 
-    public void clear(){
-        this.headNode = null;
-    }
-
     public void print(){
         System.out.println(this);
     }
 
-    public void add(T data){
-        if(data == null) return;
+    public void clear(){
+        this.headNode = null;
+    }
+
+    public boolean add(T data){
+        if(data == null) return false;
         CustomNode<T> newNode = new CustomNode<>(data);
         if(headNode == null) headNode = newNode;
         else {
             for(CustomNode<T> cn = headNode; cn != null; cn = cn.next()){
                 if(cn.next() == null){
                     cn.next(newNode);
-                    break;
+                    return true;
                 }
             }
         }
+        return false;
     }
 
-    public void addAll(Iterable<? extends T> iterable){
-        for(T data : iterable){
-            add(data);
+    public boolean addAll(Iterable<? extends T> c){
+        boolean hasAdded = false;
+        for(T data : c){
+            hasAdded = add(data);
         }
+        return hasAdded;
     }
 
     public void fixCycle(){
@@ -182,6 +186,17 @@ public class CustomLinkedList<T> implements Iterable<T> {
         for(T value : this){
             if(this.search(value).size() != 1) removeFirstOf(value);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    public T[] toArray(T[] a) {
+        if (a.length < size())  a = (T[])java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), size());
+
+        int i = 0;
+        Object[] result = a;
+        for (T value : this) result[i++] = value;
+        if (a.length > size()) a[size()] = null;
+        return a;
     }
 
     @Override
