@@ -7,6 +7,13 @@ public class LantaLogger {
         logID = 0;
     }
 
+    public <T extends Exception> void logExcept(T exception) throws T{
+        Throwable cause = exception.getCause();
+        String message = exception.getMessage();
+        log((cause == null) ? message : cause + "\n" + message);
+        throw exception;
+    }
+
     public void log(Object message) {
         StringBuilder log = new StringBuilder();
         String heading = "["+logID+" | "+loggerID+"]: ";
