@@ -1,7 +1,6 @@
-package LantaLists;
+package lanta.lists;
 
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.function.Predicate;
 public class CustomLinkedList<T> implements Iterable<T> {
     CustomNode<T> headNode;

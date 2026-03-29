@@ -1,4 +1,4 @@
-package LantaLists;
+package lanta.lists;
 
 class CustomNode<T> {
     private final T DATA;
