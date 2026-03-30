@@ -1,4 +1,7 @@
 import lanta.lists.CustomLinkedList;
+import lanta.utils.MenuConstructor;
+
+import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
@@ -29,6 +32,23 @@ public class Main {
 
         for(Student st : list2){
             System.out.println(st);
+        }
+
+        Scanner scanner = new Scanner(System.in);
+        MenuConstructor menu = new MenuConstructor("Exit", "Say hello world", "Create a student");
+        boolean wawa = true;
+        while (wawa) {
+            switch (menu.getOption(scanner)) {
+                case 0:
+                    wawa = false;
+                    break;
+                case 1:
+                    System.out.println("Hello world");
+                    break;
+                case 2:
+                    Student student = new Student(1, "mike", 9);
+                    break;
+            }
         }
     }
 }

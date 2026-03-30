@@ -4,6 +4,8 @@
     <exclude-output />
     <content url="file://$USER_HOME$/IdeaProjects/Customs">
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <excludePattern pattern="Main" />
+      <excludePattern pattern=" Student" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

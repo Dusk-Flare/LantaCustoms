@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.Scanner;
 
 public class MenuConstructor {
-    public HashMap<Integer, String> options;
-    public int option;
+    private final HashMap<Integer, String> options;
+    private int option;
     public MenuConstructor(String defaultOption,String... options) {
         this.options = new HashMap<>();
         this.options.put(0, defaultOption);
