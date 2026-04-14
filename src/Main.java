@@ -1,28 +1,17 @@
 import lanta.lists.CustomLinkedList;
+import lanta.math.Expression;
+import lanta.math.Parser;
+import lanta.math.RootFinder;
 
 import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
-        String[] array = new String[]{"null", "null1", "null2", "null3"};
-        CustomLinkedList<String> list = new CustomLinkedList<>(array);
-        CustomLinkedList<String> list1 = new CustomLinkedList<>(list);
-        ArrayList<String> arrayList = new ArrayList<>(List.of(array));
-        CustomLinkedList<String> list2 = new CustomLinkedList<>(arrayList);
-        System.out.println(list.equals(list1));
-        Iterator<String> iterator = list.iterator();
-        while(iterator.hasNext()){
-            String name = iterator.next();
-            System.out.println(name);
-            if(name != null && name.equals("null2")){
-                iterator.remove();
-                System.out.println("Removed: "+name);
-            }
-
-        }
-        list.print();
-        list1.print();
-        list2.print();
-        System.out.println(list.equals(list1));
+        String infix = "3(x) + 15";
+        String postfix = Parser.toPostfix(infix);
+        Expression<Double> expression = Parser.buildExpression(postfix);
+        System.out.println(infix + " = " + postfix);
+        System.out.println(infix.split("=", 2).length);
+        System.out.println(RootFinder.Bisector(-20, 20, expression, 0.001));
     }
 }
