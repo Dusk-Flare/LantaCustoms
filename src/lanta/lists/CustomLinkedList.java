@@ -1,18 +1,34 @@
 package lanta.lists;
 
-import java.util.Iterator;
+import java.util.*;
 import java.util.function.Predicate;
-public class CustomLinkedList<T> implements Iterable<T> {
+
+/**
+ * Custom version of {@code LinkedList} created to help me study Data Structure
+ * @param <T> This represents the type of data used within the List
+ */
+public class CustomLinkedList<T> extends AbstractCollection<T> implements Iterable<T> {
     CustomNode<T> headNode;
 
+    public CustomLinkedList() {
+
+    }
+
+    public CustomLinkedList(Collection<? extends T> collection) {
+        addAll(collection);
+    }
+
+    public CustomLinkedList(T[] array) {
+        addAll(array);
+    }
+
+    @Override
     public Iterator<T> iterator() {
         return new CustomNodeIterator();
     }
 
     public CustomLinkedList<T> copy(){
-        CustomLinkedList<T> copy = new CustomLinkedList<>();
-        copy.addAll(this);
-        return copy;
+        return new CustomLinkedList<>(this);
     }
 
     public int size(){
@@ -47,7 +63,6 @@ public class CustomLinkedList<T> implements Iterable<T> {
     }
 
     public boolean add(T data){
-        if(data == null) return false;
         CustomNode<T> newNode = new CustomNode<>(data);
         if(headNode == null) headNode = newNode;
         else {
@@ -61,10 +76,19 @@ public class CustomLinkedList<T> implements Iterable<T> {
         return false;
     }
 
-    public boolean addAll(Iterable<? extends T> c){
-        boolean hasAdded = false;
-        for(T data : c){
-            hasAdded = add(data);
+    @Override
+    public boolean addAll(Collection<? extends T> collection){
+        boolean hasAdded = true;
+        for(T data : collection){
+            hasAdded &= add(data);
+        }
+        return hasAdded;
+    }
+
+    public boolean addAll(T[] array){
+        boolean hasAdded = true;
+        for(T data : array){
+            hasAdded &= add(data);
         }
         return hasAdded;
     }
@@ -91,12 +115,17 @@ public class CustomLinkedList<T> implements Iterable<T> {
         cycleBreaker.next(null);
     }
 
-    public CustomLinkedList<T> search(T data){
-        CustomLinkedList<T> result = new CustomLinkedList<>();
+    @Override
+    public boolean contains(Object data){
+        boolean contains = false;
         for(T value : this){
-            if(value.equals(data)) result.add(value);
+            contains |= Objects.equals(data, value);
         }
-        return result;
+        return contains;
+    }
+
+    public CustomLinkedList<T> search(T data){
+        return compareSearch(value -> Objects.equals(data, value));
     }
 
     public CustomLinkedList<T> compareSearch(Predicate<T> condition){
@@ -115,26 +144,50 @@ public class CustomLinkedList<T> implements Iterable<T> {
         return intersection;
     }
 
-    public T removeFirstOf(T data){
-        if(headNode == null) return null;
-        if (headNode.value().equals(data)) return pop();
+    boolean deleteNode(CustomNode<T> node){
         CustomNode<T> previous = headNode;
         for(CustomNode<T> cn = headNode; cn != null; cn = cn.next()){
-            if(cn.value().equals(data)){
+            if(cn.equals(node)){
                 previous.next(cn.next());
-                return cn.value();
+                return true;
             }
             previous = cn;
         }
-        return null;
+        return false;
     }
 
-    public T compareRemoveFirstOf(Predicate<T> condition){
-        if(headNode == null) return null;
-        if (condition.test(headNode.value())) return pop();
+    @Override
+    public boolean remove(Object data){
+        return compareRemove(value -> Objects.equals(data, value));
+    }
+
+    public boolean compareRemove(Predicate<T> condition){
+        if(headNode == null) return false;
+        if (headNode.test(condition)) {
+            pop();
+            return true;
+        }
         CustomNode<T> previous = headNode;
         for(CustomNode<T> cn = headNode; cn != null; cn = cn.next()){
-            if(condition.test(cn.value())){
+            if(cn.test(condition)){
+                previous.next(cn.next());
+                return true;
+            }
+            previous = cn;
+        }
+        return false;
+    }
+
+    public T extract(T data){
+        return compareExtract(value -> Objects.equals(data, value));
+    }
+
+    public T compareExtract(Predicate<T> condition){
+        if(headNode == null) return null;
+        if (headNode.test(condition)) return pop();
+        CustomNode<T> previous = headNode;
+        for(CustomNode<T> cn = headNode; cn != null; cn = cn.next()){
+            if(cn.test(condition)){
                 previous.next(cn.next());
                 return cn.value();
             }
@@ -144,34 +197,19 @@ public class CustomLinkedList<T> implements Iterable<T> {
     }
 
     public boolean deleteAllOf(T data){
-        boolean result = false;
-        if(headNode == null) return false;
-        while (headNode != null && headNode.value().equals(data)){
-            pop();
-            result = true;
-        }
-        CustomNode<T> previous = headNode;
-        for(CustomNode<T> cn = headNode; cn != null; cn = cn.next()){
-            if(cn.value().equals(data)){
-                previous.next(cn.next());
-                cn = previous;
-                result = true;
-            }
-            previous = cn;
-        }
-        return result;
+        return compareDeleteAllOf(value -> Objects.equals(data, value));
     }
 
     public boolean compareDeleteAllOf(Predicate<T> condition){
         boolean result = false;
         if(headNode == null) return false;
-        while (headNode != null && condition.test(headNode.value())){
+        while (headNode.test(condition)){
             pop();
             result = true;
         }
         CustomNode<T> previous = headNode;
         for(CustomNode<T> cn = headNode; cn != null; cn = cn.next()){
-            if(condition.test(cn.value())){
+            if(cn.test(condition)){
                 previous.next(cn.next());
                 cn = previous;
                 result = true;
@@ -183,19 +221,20 @@ public class CustomLinkedList<T> implements Iterable<T> {
 
     public void removeDuplicates(){
         for(T value : this){
-            if(this.search(value).size() != 1) removeFirstOf(value);
+            if(this.search(value).size() != 1) extract(value);
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public T[] toArray(T[] a) {
-        if (a.length < size())  a = (T[])java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), size());
-
-        int i = 0;
-        Object[] result = a;
-        for (T value : this) result[i++] = value;
-        if (a.length > size()) a[size()] = null;
-        return a;
+    @Override
+    public boolean retainAll(Collection<?> collection) {
+        Objects.requireNonNull(collection);
+        boolean modified = false;
+        for(T data : this){
+            if(!collection.contains(data)){
+                modified |= deleteAllOf(data);
+            }
+        }
+        return modified;
     }
 
     @Override
@@ -210,24 +249,58 @@ public class CustomLinkedList<T> implements Iterable<T> {
         return str.toString();
     }
 
+    @Override
+    public boolean equals(Object o){
+        if(this == o) return true;
+        if(o == null || (getClass() != o.getClass())) return super.equals(o);
+        CustomLinkedList<?> newList = (CustomLinkedList<?>) o;
+        Iterator<T> thisIterator = iterator();
+        Iterator<?> otherIterator = newList.iterator();
+
+        while(thisIterator.hasNext() && otherIterator.hasNext()){
+            if(!Objects.equals(thisIterator.next(), otherIterator.next())) return false;
+            if(thisIterator.hasNext() ^ otherIterator.hasNext()) return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode(){
+        int hash = getClass().hashCode();
+        for(T element : this) hash = 31 * hash + Objects.hashCode(element);
+        return hash;
+    }
+
     class CustomNodeIterator implements Iterator<T> {
+        private CustomNode<T> nextNode;
         private CustomNode<T> currentNode;
+        private CustomNode<T> lastNode;
+        CustomNodeIterator(){
+            nextNode = headNode;
+        }
 
         @Override
         public boolean hasNext() {
-            if (currentNode == null) currentNode = headNode;
-            else currentNode = currentNode.next();
-            return currentNode != null;
+            return nextNode != null;
         }
 
         @Override
         public T next() {
+            if (nextNode == null) throw new NoSuchElementException();
+            lastNode = currentNode;
+            currentNode = nextNode;
+            nextNode = nextNode.next();
             return currentNode.value();
         }
 
         @Override
         public void remove() {
-            throw new UnsupportedOperationException();
+            if(deleteNode(currentNode)) currentNode = lastNode;
+        }
+
+        public void removeIf(Predicate<T> condition){
+            if(!currentNode.test(condition)) return;
+            remove();
         }
     }
 }

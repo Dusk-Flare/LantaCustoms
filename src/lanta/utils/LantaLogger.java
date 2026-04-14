@@ -13,6 +13,12 @@ public class LantaLogger {
     private final boolean isDiscrete;
     private final ArrayList<String> fullLog;
 
+    /**
+     * The LantaLogger class is a simple logger that registers messages and errors into the console, and keeps track of them.
+     *
+     * @param owner This parameter represents the specific class this logger is supposed to log under.
+     * @param isDiscrete This boolean dictates weather or not the logger will imediatelly print out the logged message upon call.
+     */
     public LantaLogger(Class<?> owner, boolean isDiscrete) {
         loggerID = owner.getSimpleName();
         logID = 0;

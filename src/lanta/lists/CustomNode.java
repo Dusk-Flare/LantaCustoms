@@ -1,5 +1,8 @@
 package lanta.lists;
 
+import java.util.Objects;
+import java.util.function.Predicate;
+
 class CustomNode<T> {
     private final T DATA;
     private CustomNode<T> nextNode;
@@ -20,8 +23,17 @@ class CustomNode<T> {
         return nextNode;
     }
 
+    public boolean test(Predicate<T> condition){
+        return condition.test(DATA);
+    }
+
+    public boolean test(Object data){
+        return Objects.equals(data, DATA);
+    }
+
     @Override
     public String toString() {
+        if(DATA == null) return null;
         return DATA.toString();
     }
 }
