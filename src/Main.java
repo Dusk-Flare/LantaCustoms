@@ -1,17 +1,22 @@
-import lanta.lists.CustomLinkedList;
+import lanta.math.Calculus;
 import lanta.math.Expression;
 import lanta.math.Parser;
 import lanta.math.RootFinder;
 
 import java.util.*;
 
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
+
 public class Main {
     public static void main(String[] args) {
-        String infix = "3(x) + 15";
+        String infix = "4+xcos(x)";
         String postfix = Parser.toPostfix(infix);
-        Expression<Double> expression = Parser.buildExpression(postfix);
-        System.out.println(infix + " = " + postfix);
-        System.out.println(infix.split("=", 2).length);
-        System.out.println(RootFinder.Bisector(-20, 20, expression, 0.001));
+        System.out.println(infix);
+        System.out.println(postfix);
+        Expression<Double> equation = Parser.buildExpression(postfix);
+        Expression<Double> derivative = Calculus.derivate(equation);
+        System.out.println(RootFinder.Newton(8, equation, derivative, Math.pow(10, -5)));
+        System.out.println(RootFinder.Newton(12, equation, derivative, Math.pow(10, -5)));
     }
 }

@@ -1,7 +1,11 @@
 package lanta.math;
 
-import java.util.Map;
-import java.util.Stack;
+import java.util.*;
+import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static java.lang.Math.*;
 
 public final class Parser {
     private Parser() {}
@@ -9,18 +13,60 @@ public final class Parser {
     private static final Map<Character, Integer> PRECEDENCE = Map.of(
         '+', 1, '-', 1,
         '*', 2, '/', 2,
-        '^', 3, '~', 4
+        '^', 3,
+        '~', 4, '°', 4
     );
+
+    private static final Map<String, Double> CONSTANTS = Map.of(
+            "e", Math.E,
+            "pi", Math.PI
+    );
+
+    private static final Map<Character, String> FUNCTIONS = Map.of(
+            'A', "sin",
+            'B', "cos",
+            'C', "tan",
+            'D', "floor",
+            'E', "ceil"
+    );
+
+    private static final List<Character> IMPLICITS = new ArrayList<>(List.of(
+            'x', 'X', '('
+    ));
+    static {
+        IMPLICITS.addAll(FUNCTIONS.keySet());
+    }
+
+    public static <T extends Number> T toNumber(String text, Function<String, T> parser){
+        try{
+            return toNumber(text, parser, null);
+        } catch(NumberFormatException e){
+            return null;
+        }
+    }
+
+    public static <T extends Number> T toNumber(String text, Function<String, T> parser, T defaultsTo) throws NumberFormatException {
+        text = text.replaceAll("^(-?(\\d+(\\.\\d+)?|\\.\\d+)).*", "$1");
+        try {
+            return parser.apply(text);
+        } catch (NumberFormatException e) {
+            if(defaultsTo == null) throw e;
+            return defaultsTo;
+        }
+    }
 
     public static String toPostfix(String infix) {
         StringBuilder output = new StringBuilder();
         Stack<Character> operators = new Stack<>();
+        System.out.println(invertUnitPos(infix));
+        for (Map.Entry<Character, String> entry : FUNCTIONS.entrySet()) {
+            infix = infix.replace(entry.getValue(), entry.getKey().toString());
+        }
         char[] tokens = infix.replace(" ", "").toCharArray();
         boolean nextCanBeUnary = true;
 
         for (int i = 0; i < tokens.length; i++) {
             char token = tokens[i];
-
             if (isNumber(token)) {
                 i = appendNumber(tokens, i, output);
                 nextCanBeUnary = false;
@@ -51,11 +97,9 @@ public final class Parser {
                 continue;
             }
 
-            if (isOperator(token)) {
+            if (isOperator(token) || isFunction(token)) {
                 if (nextCanBeUnary) {
-                    if (token == '-') {
-                        pushOperator('~', operators, output);
-                    }
+                    pushOperator(token == '-' ? '~' : token, operators, output);
                 } else {
                     pushOperator(token, operators, output);
                 }
@@ -64,7 +108,8 @@ public final class Parser {
         }
 
         while (!operators.isEmpty()) {
-            output.append(operators.pop()).append(' ');
+            char op =  operators.pop();
+            output.append(isFunction(op) ? FUNCTIONS.get(op) : op).append(' ');
         }
 
         return output.toString().trim();
@@ -81,11 +126,20 @@ public final class Parser {
                 if (op == '~') {
                     Expression<Double> arg = stack.pop();
                     stack.push(x -> -arg.eval(x));
-                } else {
+                } else if(op == '°'){
+                    Expression<Double> arg = stack.pop();
+                    stack.push(x -> Math.toRadians(arg.eval(x)));
+                } else{
                     Expression<Double> right = stack.pop();
                     Expression<Double> left = stack.pop();
                     stack.push(applyOperator(op, left, right));
                 }
+                continue;
+            }
+
+            if(isFunctionToken(token)){
+                Expression<Double> arg = stack.pop();
+                stack.push(applyFunctions(token, arg));
                 continue;
             }
 
@@ -94,11 +148,22 @@ public final class Parser {
                 continue;
             }
 
+            if(isConstantToken(token)){
+                stack.push(_ -> CONSTANTS.get(token));
+                continue;
+            }
+
             double value = Double.parseDouble(token);
             stack.push(_ -> value);
         }
 
         return stack.pop();
+    }
+
+    private static String invertUnitPos(String input){
+        return input.replaceAll("(\\d+)(°)", " $2$1")
+                .replaceAll("(\\(*\\))(°)", " $2$1")
+                .replaceAll("([xX])(°)", " $2$1");
     }
 
     private static int appendNumber(char[] tokens, int index, StringBuilder output) {
@@ -112,16 +177,18 @@ public final class Parser {
 
     private static boolean hasImplicitMultiplication(char[] tokens, int index) {
         int next = index + 1;
-        return next < tokens.length && (tokens[next] == 'x' || tokens[next] == 'X' || tokens[next] == '(');
+        return next < tokens.length && IMPLICITS.contains(tokens[next]);
     }
 
     private static void pushOperator(char operator, Stack<Character> stack, StringBuilder output) {
         while (!stack.isEmpty() && stack.peek() != '(') {
-            int top = PRECEDENCE.getOrDefault(stack.peek(), 0);
-            int current = PRECEDENCE.get(operator);
+            char stackToken = isFunction(stack.peek()) ? '°' : stack.peek();
+            int top = PRECEDENCE.getOrDefault(stackToken, 0);
+            int current = PRECEDENCE.get(isFunction(operator) ? '°' : operator);
 
-            if (top > current || (top == current && operator != '^' && operator != '~')) {
-                output.append(stack.pop()).append(' ');
+            if (top > current || (top == current && operator != '^' && operator != '°' && operator != '~' && !isFunction(operator))) {
+                char op = stack.pop();
+                output.append(isFunction(op) ? FUNCTIONS.get(op) : op).append(' ');
             } else {
                 break;
             }
@@ -131,7 +198,8 @@ public final class Parser {
 
     private static void unwindUntilOpenParenthesis(Stack<Character> stack, StringBuilder output) {
         while (!stack.isEmpty() && stack.peek() != '(') {
-            output.append(stack.pop()).append(' ');
+            char op = stack.pop();
+            output.append(isFunction(op) ? FUNCTIONS.get(op) : op).append(' ');;
         }
         if (!stack.isEmpty()) stack.pop();
     }
@@ -151,6 +219,20 @@ public final class Parser {
         };
     }
 
+    private static Expression<Double> applyFunctions(String function, Expression<Double> operand) {
+        return x -> {
+            double a = operand.eval(x);
+            return switch (function) {
+                case "sin" -> sin(a);
+                case "cos" -> cos(a);
+                case "tan" -> tan(a);
+                case "floor" -> floor(a);
+                case "ceil" -> ceil(a);
+                default -> 0.0;
+            };
+        };
+    }
+
     private static boolean isNumber(char c) {
         return Character.isDigit(c);
     }
@@ -163,11 +245,23 @@ public final class Parser {
         return PRECEDENCE.containsKey(c);
     }
 
+    private static boolean isFunction(char c) {
+        return FUNCTIONS.containsKey(c);
+    }
+
     private static boolean isOperatorToken(String token) {
         return token.length() == 1 && isOperator(token.charAt(0));
     }
 
     private static boolean isVariableToken(String token) {
         return token.equalsIgnoreCase("x");
+    }
+
+    private static boolean isConstantToken(String token) {
+        return CONSTANTS.containsKey(token);
+    }
+
+    private static boolean isFunctionToken(String token) {
+        return FUNCTIONS.containsValue(token);
     }
 }

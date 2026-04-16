@@ -1,5 +1,7 @@
 package lanta.utils;
 
+import lanta.math.Parser;
+
 import java.util.HashMap;
 import java.util.Scanner;
 
@@ -27,16 +29,10 @@ public class MenuConstructor {
         }
         System.out.println(message);
         System.out.println("Select an option:");
-        String selection = scanner.nextLine().replaceAll("\\D.*", "");
-        try {
-            int selectedOption = Integer.parseInt(selection);
-            if(options.containsKey(selectedOption)) return selectedOption;
-            else {
-                System.out.println("Invalid option, defaulting to 0");
-                return 0;
-            }
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid number format, defaulting to 0");
+        int selectedOption = Parser.toNumber(scanner.nextLine(), Integer::parseInt, 0);
+        if(options.containsKey(selectedOption)) return selectedOption;
+        else {
+            System.out.println("Invalid option, defaulting to 0");
             return 0;
         }
     }
