@@ -1,9 +1,9 @@
 package lanta.math;
 
+import lanta.math.expressions.Expression;
+
 import java.util.*;
 import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static java.lang.Math.*;
 

@@ -1,5 +1,7 @@
 package lanta.math;
 
+import lanta.math.expressions.Expression;
+
 public class RootFinder {
     public static double Bisector(double Xa, double Xb, Expression<Double> equation, double precision) throws NumberFormatException {
         while(true){
