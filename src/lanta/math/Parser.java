@@ -4,38 +4,45 @@ import lanta.math.expressions.Expression;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.lang.Math.*;
 
 public final class Parser {
-    private Parser() {}
-
-    private static final Map<Character, Integer> PRECEDENCE = Map.of(
-        '+', 1, '-', 1,
-        '*', 2, '/', 2,
-        '^', 3,
-        '~', 4, '°', 4
+    private static final Map<String, Integer> PRECEDENCE = Map.of(
+            "+", 1, "-", 1,
+            "*", 2, "/", 2,
+            "^", 3,
+            "~", 4, "°", 4
     );
-
-    private static final Map<String, Double> CONSTANTS = Map.of(
+    private static final Map<String, Double> CONSTANT_VALUES = Map.of(
             "e", Math.E,
             "pi", Math.PI
     );
-
-    private static final Map<Character, String> FUNCTIONS = Map.of(
-            'A', "sin",
-            'B', "cos",
-            'C', "tan",
-            'D', "floor",
-            'E', "ceil"
+    private static final Map<String, Expression<Double>> FUNCTION_VALUES = Map.of(
+            "sin", x -> sin(x.doubleValue()),
+            "cos", x -> cos(x.doubleValue()),
+            "tan", x -> tan(x.doubleValue()),
+            "floor", x -> floor(x.doubleValue()),
+            "ceil", x -> ceil(x.doubleValue()),
+            "toDegrees", x -> toDegrees(x.doubleValue())
     );
 
-    private static final List<Character> IMPLICITS = new ArrayList<>(List.of(
-            'x', 'X', '('
+    private static final Set<String> CONSTANTS = CONSTANT_VALUES.keySet();
+    private static final Set<String> FUNCTIONS = FUNCTION_VALUES.keySet();
+
+    private static final Set<String> IMPLICITS = new HashSet<>(List.of(
+            "x", "X", "("
     ));
     static {
-        IMPLICITS.addAll(FUNCTIONS.keySet());
+        IMPLICITS.addAll(FUNCTIONS);
+        IMPLICITS.addAll(CONSTANTS);
     }
+
+    private static final Pattern TOKEN_PATTERN = Pattern.compile(
+            "\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?|\\.\\d+(?:[eE][+-]?\\d+)?|[a-zA-Z_]+|[()+\\-*/^~°]|\\S"                    // catch any other single character (error)
+    );
 
     public static <T extends Number> T toNumber(String text, Function<String, T> parser){
         try{
@@ -43,6 +50,14 @@ public final class Parser {
         } catch(NumberFormatException e){
             return null;
         }
+    }
+
+    public static <T extends Number> Matrix<T> toMatrix(T[][] base, Function<Number, T> converter) {
+        T[][] matrixArray = Arrays.copyOf(base, 5);
+        for (int i = 0; i < matrixArray.length; i++) {
+            matrixArray[i] = Arrays.copyOf(matrixArray[i], 5);
+        }
+        return new Matrix<>(matrixArray, converter);
     }
 
     public static <T extends Number> T toNumber(String text, Function<String, T> parser, T defaultsTo) throws NumberFormatException {
@@ -57,21 +72,27 @@ public final class Parser {
 
     public static String toPostfix(String infix) {
         StringBuilder output = new StringBuilder();
-        Stack<Character> operators = new Stack<>();
-        System.out.println(invertUnitPos(infix));
-        for (Map.Entry<Character, String> entry : FUNCTIONS.entrySet()) {
-            infix = infix.replace(entry.getValue(), entry.getKey().toString());
-        }
-        char[] tokens = infix.replace(" ", "").toCharArray();
+        List<String> tokens = tokenize(infix);
+        Stack<String> operators = new Stack<>();
         boolean nextCanBeUnary = true;
 
-        for (int i = 0; i < tokens.length; i++) {
-            char token = tokens[i];
+        for (int i = 0; i < tokens.size(); i++) {
+            String token = tokens.get(i);
+
             if (isNumber(token)) {
-                i = appendNumber(tokens, i, output);
+                output.append(token).append(' ');
                 nextCanBeUnary = false;
                 if (hasImplicitMultiplication(tokens, i)) {
-                    pushOperator('*', operators, output);
+                    pushOperator("*", operators, output);
+                }
+                continue;
+            }
+
+            if (isConstant(token)) {
+                output.append(token).append(' ');
+                nextCanBeUnary = false;
+                if (hasImplicitMultiplication(tokens, i)) {
+                    pushOperator("*", operators, output);
                 }
                 continue;
             }
@@ -80,36 +101,32 @@ public final class Parser {
                 output.append("x ");
                 nextCanBeUnary = false;
                 if (hasImplicitMultiplication(tokens, i)) {
-                    pushOperator('*', operators, output);
+                    pushOperator("*", operators, output);
                 }
                 continue;
             }
 
-            if (token == '(') {
+            if (token.equals("(")) {
                 operators.push(token);
                 nextCanBeUnary = true;
                 continue;
             }
 
-            if (token == ')') {
+            if (token.equals(")")) {
                 unwindUntilOpenParenthesis(operators, output);
                 nextCanBeUnary = false;
                 continue;
             }
 
             if (isOperator(token) || isFunction(token)) {
-                if (nextCanBeUnary) {
-                    pushOperator(token == '-' ? '~' : token, operators, output);
-                } else {
-                    pushOperator(token, operators, output);
-                }
+                String op = nextCanBeUnary && token.equals("-") ? "~" : token;
+                pushOperator(op, operators, output);
                 nextCanBeUnary = true;
             }
         }
 
         while (!operators.isEmpty()) {
-            char op =  operators.pop();
-            output.append(isFunction(op) ? FUNCTIONS.get(op) : op).append(' ');
+            output.append(operators.pop()).append(' ');
         }
 
         return output.toString().trim();
@@ -121,35 +138,34 @@ public final class Parser {
         for (String token : postfix.split("\\s+")) {
             if (token.isEmpty()) continue;
 
-            if (isOperatorToken(token)) {
-                char op = token.charAt(0);
-                if (op == '~') {
+            if (isOperator(token)) {
+                if (token.equals("~")) {
                     Expression<Double> arg = stack.pop();
                     stack.push(x -> -arg.eval(x));
-                } else if(op == '°'){
+                } else if (token.equals("°")) {
                     Expression<Double> arg = stack.pop();
                     stack.push(x -> Math.toRadians(arg.eval(x)));
                 } else{
                     Expression<Double> right = stack.pop();
                     Expression<Double> left = stack.pop();
-                    stack.push(applyOperator(op, left, right));
+                    stack.push(applyOperator(token, left, right));
                 }
                 continue;
             }
 
-            if(isFunctionToken(token)){
+            if (isFunction(token)) {
                 Expression<Double> arg = stack.pop();
-                stack.push(applyFunctions(token, arg));
+                stack.push(applyFunction(token, arg));
                 continue;
             }
 
-            if (isVariableToken(token)) {
+            if (isVariable(token)) {
                 stack.push(Number::doubleValue);
                 continue;
             }
 
-            if(isConstantToken(token)){
-                stack.push(_ -> CONSTANTS.get(token));
+            if (isConstant(token)) {
+                stack.push(_ -> CONSTANT_VALUES.get(token));
                 continue;
             }
 
@@ -160,108 +176,81 @@ public final class Parser {
         return stack.pop();
     }
 
-    private static String invertUnitPos(String input){
-        return input.replaceAll("(\\d+)(°)", " $2$1")
-                .replaceAll("(\\(*\\))(°)", " $2$1")
-                .replaceAll("([xX])(°)", " $2$1");
-    }
-
-    private static int appendNumber(char[] tokens, int index, StringBuilder output) {
-        while (index < tokens.length && (Character.isDigit(tokens[index]) || 
-               tokens[index] == '.' || tokens[index] == 'e' || tokens[index] == 'E')) {
-            output.append(tokens[index++]);
+    private static List<String> tokenize(String expression) {
+        List<String> tokens = new ArrayList<>();
+        Matcher m = TOKEN_PATTERN.matcher(expression);
+        while (m.find()) {
+            String token = m.group();
+            tokens.add(token);
         }
-        output.append(' ');
-        return index - 1;
+        return tokens;
     }
 
-    private static boolean hasImplicitMultiplication(char[] tokens, int index) {
+    private static boolean hasImplicitMultiplication(List<String> tokens, int index) {
         int next = index + 1;
-        return next < tokens.length && IMPLICITS.contains(tokens[next]);
+        return next < tokens.size() && IMPLICITS.contains(tokens.get(next));
     }
 
-    private static void pushOperator(char operator, Stack<Character> stack, StringBuilder output) {
-        while (!stack.isEmpty() && stack.peek() != '(') {
-            char stackToken = isFunction(stack.peek()) ? '°' : stack.peek();
-            int top = PRECEDENCE.getOrDefault(stackToken, 0);
-            int current = PRECEDENCE.get(isFunction(operator) ? '°' : operator);
+    private static void pushOperator(String operator, Stack<String> stack, StringBuilder output) {
+        while (!stack.isEmpty() && !stack.peek().equals("(")) {
+            String topOp = stack.peek();
+            int topPrec = PRECEDENCE.getOrDefault(topOp, 0);
+            int currPrec = PRECEDENCE.get(operator);
 
-            if (top > current || (top == current && operator != '^' && operator != '°' && operator != '~' && !isFunction(operator))) {
-                char op = stack.pop();
-                output.append(isFunction(op) ? FUNCTIONS.get(op) : op).append(' ');
-            } else {
-                break;
-            }
+            if (topPrec > currPrec || (topPrec == currPrec && !operator.matches("[~°^]") && !isFunction(operator))) {
+                output.append(stack.pop()).append(' ');
+            } else break;
         }
         stack.push(operator);
     }
 
-    private static void unwindUntilOpenParenthesis(Stack<Character> stack, StringBuilder output) {
-        while (!stack.isEmpty() && stack.peek() != '(') {
-            char op = stack.pop();
-            output.append(isFunction(op) ? FUNCTIONS.get(op) : op).append(' ');;
+    private static void unwindUntilOpenParenthesis(Stack<String> stack, StringBuilder output) {
+        while (!stack.isEmpty() && !stack.peek().equals("(")) {
+            output.append(stack.pop()).append(' ');
         }
         if (!stack.isEmpty()) stack.pop();
     }
 
-    private static Expression<Double> applyOperator(char operator, Expression<Double> left, Expression<Double> right) {
+    private static Expression<Double> applyOperator(String operator, Expression<Double> left, Expression<Double> right) {
         return x -> {
             double a = left.eval(x);
             double b = right.eval(x);
             return switch (operator) {
-                case '+' -> a + b;
-                case '-' -> a - b;
-                case '*' -> a * b;
-                case '/' -> a / b;
-                case '^' -> Math.pow(a, b);
+                case "+" -> a + b;
+                case "-" -> a - b;
+                case "*" -> a * b;
+                case "/" -> a / b;
+                case "^" -> Math.pow(a, b);
                 default  -> 0.0;
             };
         };
     }
 
-    private static Expression<Double> applyFunctions(String function, Expression<Double> operand) {
+    private static Expression<Double> applyFunction(String function, Expression<Double> operand) {
+        Expression<Double> operation = FUNCTION_VALUES.get(function);
         return x -> {
             double a = operand.eval(x);
-            return switch (function) {
-                case "sin" -> sin(a);
-                case "cos" -> cos(a);
-                case "tan" -> tan(a);
-                case "floor" -> floor(a);
-                case "ceil" -> ceil(a);
-                default -> 0.0;
-            };
+            return operation.eval(a);
         };
     }
 
-    private static boolean isNumber(char c) {
-        return Character.isDigit(c);
+    private static boolean isNumber(String token) {
+        return toNumber(token, Double::parseDouble) != null;
     }
 
-    private static boolean isVariable(char c) {
-        return c == 'x' || c == 'X';
-    }
-
-    private static boolean isOperator(char c) {
-        return PRECEDENCE.containsKey(c);
-    }
-
-    private static boolean isFunction(char c) {
-        return FUNCTIONS.containsKey(c);
-    }
-
-    private static boolean isOperatorToken(String token) {
-        return token.length() == 1 && isOperator(token.charAt(0));
-    }
-
-    private static boolean isVariableToken(String token) {
+    private static boolean isVariable(String token) {
         return token.equalsIgnoreCase("x");
     }
 
-    private static boolean isConstantToken(String token) {
-        return CONSTANTS.containsKey(token);
+    private static boolean isConstant(String token) {
+        return CONSTANTS.contains(token);
     }
 
-    private static boolean isFunctionToken(String token) {
-        return FUNCTIONS.containsValue(token);
+    private static boolean isOperator(String token) {
+        return PRECEDENCE.containsKey(token);
+    }
+
+    private static boolean isFunction(String token) {
+        return FUNCTIONS.contains(token);
     }
 }

@@ -1,17 +1,17 @@
 package lanta.math;
 
 public class LinearEquations {
-    public static double[] gaussSeidel(double[][] matrix, double[] results, double[] initialValues, double precision) {
-        if (matrix.length != matrix[0].length) throw new IllegalArgumentException("Matrix must be square");
-        if (matrix.length != initialValues.length) throw new IllegalArgumentException("Initial values size must match matrix size");
-        if (matrix.length != results.length) throw new IllegalArgumentException("Results size must match matrix size");
-        int size = matrix.length;
-        double[] values = initialValues.clone();
+    public static <T extends Number> Matrix<T> gaussSeidel(Matrix<T> matrix, Matrix<T> results, Matrix<T> initialValues, double precision) {
+        if (!matrix.isSquare()) throw new IllegalArgumentException("Matrix must be square");
+        if (matrix.rows != initialValues.rows || initialValues.columns != 1) throw new IllegalArgumentException("Initial values size must match matrix in rows, and only have 1 column");
+        if (matrix.rows != results.rows || results.columns != 1) throw new IllegalArgumentException("Results size must match matrix in rows, and only have 1 column");
+        int size = matrix.rows;
+        Matrix<T> values = new Matrix<>(initialValues);
         while (true) {
-            double[] nextValues = updateValues(matrix, results, values, size);
+            Matrix<T> nextValues = updateValues(matrix, results, values, size);
             boolean isFinished = true;
             for (int i = 0; i < size; i++) {
-                if (Math.abs(values[i] - nextValues[i]) > precision) {
+                if (Math.abs(values.get(i).doubleValue() - nextValues.get(i).doubleValue()) > precision) {
                     isFinished = false;
                     break;
                 }
@@ -20,14 +20,14 @@ public class LinearEquations {
         }
     }
 
-    private static double[] updateValues(double[][] matrix, double[] results, double[] values, int size) {
-        double[] newValues = values.clone();
+    private static <T extends Number> Matrix<T> updateValues(Matrix<T> matrix, Matrix<T> results, Matrix<T> values, int size) {
+        Matrix<T> newValues = new Matrix<>(values);
         for (int i = 0; i < size; i++) {
-            double sum = results[i];
+            double sum = results.get(i).doubleValue();
             for (int j = 0; j < size; j++) {
-                if (i != j) sum -= matrix[i][j] * newValues[j];
+                if (i != j) sum -= matrix.get(i, j).doubleValue() * newValues.get(j).doubleValue();
             }
-            newValues[i] = sum / matrix[i][i];
+            newValues.put(i, sum / matrix.get(i, i).doubleValue());
         }
         return newValues;
     }
