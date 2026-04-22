@@ -41,7 +41,7 @@ public final class Parser {
     }
 
     private static final Pattern TOKEN_PATTERN = Pattern.compile(
-            "\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?|\\.\\d+(?:[eE][+-]?\\d+)?|[a-zA-Z_]+|[()+\\-*/^~°]|\\S"                    // catch any other single character (error)
+            "\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?|\\.\\d+(?:[eE][+-]?\\d+)?|[a-zA-Z_]+|[()+\\-*/^~°]|\\S"
     );
 
     public static <T extends Number> T toNumber(String text, Function<String, T> parser){
