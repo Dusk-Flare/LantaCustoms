@@ -1,15 +1,15 @@
 import lanta.math.Matrix;
 import lanta.math.Parser;
+import lanta.math.expressions.Expression;
 
 public class Main {
     public static void main(String[] args) {
-        Integer[][] array = {{1, 2},{3,4}};
-        Matrix<Integer> matrix = new Matrix<>(array, Number::intValue);
-        System.out.println(matrix);
-        Matrix<Double> wow = new Matrix<>(matrix.toString(), Double::valueOf, Number::doubleValue);
-        System.out.println(wow);
-        String post = Parser.toPostfix("toDegrees(pi)");
-        System.out.println(post);
-        System.out.println(Parser.buildExpression(post).eval(0));
+        String infix = "sin(x)^2+cos(x)^2";
+        String postfix = Parser.toPostfix(infix);
+        Expression<Double> function = Parser.buildExpression(postfix);
+
+        System.out.println(infix);
+        System.out.println(postfix);
+        System.out.println(function.eval(2));
     }
 }

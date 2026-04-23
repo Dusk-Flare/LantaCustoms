@@ -14,7 +14,8 @@ public final class Parser {
             "+", 1, "-", 1,
             "*", 2, "/", 2,
             "^", 3,
-            "~", 4, "°", 4
+            "function", 4,
+            "~", 5, "°", 5
     );
     private static final Map<String, Double> CONSTANT_VALUES = Map.of(
             "e", Math.E,
@@ -194,13 +195,14 @@ public final class Parser {
     private static void pushOperator(String operator, Stack<String> stack, StringBuilder output) {
         while (!stack.isEmpty() && !stack.peek().equals("(")) {
             String topOp = stack.peek();
-            int topPrec = PRECEDENCE.getOrDefault(topOp, 0);
-            int currPrec = PRECEDENCE.get(operator);
+            int topPrec = PRECEDENCE.getOrDefault(isFunction(topOp) ? "function" : topOp, 0);
+            int currPrec = PRECEDENCE.get(isFunction(operator) ? "function" : operator);
 
             if (topPrec > currPrec || (topPrec == currPrec && !operator.matches("[~°^]") && !isFunction(operator))) {
                 output.append(stack.pop()).append(' ');
             } else break;
         }
+        System.out.println(operator);
         stack.push(operator);
     }
 
