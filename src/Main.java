@@ -1,15 +1,29 @@
-import lanta.math.Matrix;
-import lanta.math.Parser;
-import lanta.math.expressions.Expression;
+import lanta.lists.DoublyLinkedList;
 
 public class Main {
     public static void main(String[] args) {
-        String infix = "sin(x)^2+cos(x)^2";
-        String postfix = Parser.toPostfix(infix);
-        Expression<Double> function = Parser.buildExpression(postfix);
-
-        System.out.println(infix);
-        System.out.println(postfix);
-        System.out.println(function.eval(2));
+        DoublyLinkedList<Double> list = new DoublyLinkedList<>();
+        System.out.println("Adding");
+        list.addFirst(2.0);
+        list.addFirst(3.0);
+        list.addFirst(4.0);
+        list.addLast(0.0);
+        list.print();
+        System.out.println("Removing");
+        list.addLast(3.0);
+        list.print();
+        list.remove(3.0);
+        list.print();
+        System.out.println("Iterating");
+        for(double data : list){
+            System.out.println(data);
+        }
+        System.out.println("Iterating in reverse");
+        for (double data : list.reverse()){
+            System.out.println(data);
+        }
+        System.out.println("Reversing");
+        list = list.reverse();
+        list.print();
     }
 }
