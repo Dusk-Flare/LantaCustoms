@@ -24,7 +24,7 @@ public class DoublyLinkedList<T> extends AbstractCollection<T> implements Iterab
     }
 
     @Override
-    public Iterator<T> iterator() {
+    public DoubleNodeIterator iterator() {
         return new DoubleNodeIterator(this);
     }
 
@@ -206,7 +206,7 @@ public class DoublyLinkedList<T> extends AbstractCollection<T> implements Iterab
         for(DoubleNode<T> cn = headNode; cn != null; cn = cn.next()){
             if(cn.equals(node)){
                 previous.next(cn.next());
-                cn.next().previous(previous);
+                if(cn.next() != null) cn.next().previous(previous);
                 return true;
             }
             previous = cn;
@@ -229,7 +229,7 @@ public class DoublyLinkedList<T> extends AbstractCollection<T> implements Iterab
         for(DoubleNode<T> cn = headNode; cn != null; cn = cn.next()){
             if(cn.test(condition)){
                 previous.next(cn.next());
-                cn.next().previous(previous);
+                if(cn.next() != null) cn.next().previous(previous);
                 return true;
             }
             previous = cn;
@@ -248,7 +248,7 @@ public class DoublyLinkedList<T> extends AbstractCollection<T> implements Iterab
         for(DoubleNode<T> cn = headNode; cn != null; cn = cn.next()){
             if(cn.test(condition)){
                 previous.next(cn.next());
-                cn.next().previous(previous);
+                if(cn.next() != null) cn.next().previous(previous);
                 return cn.value();
             }
             previous = cn;
@@ -271,7 +271,7 @@ public class DoublyLinkedList<T> extends AbstractCollection<T> implements Iterab
         for(DoubleNode<T> cn = headNode; cn != null; cn = cn.next()){
             if(cn.test(condition)){
                 previous.next(cn.next());
-                cn.next().previous(previous);
+                if(cn.next() != null) cn.next().previous(previous);
                 cn = previous;
                 result = true;
             }
@@ -332,7 +332,7 @@ public class DoublyLinkedList<T> extends AbstractCollection<T> implements Iterab
         return hash;
     }
 
-    class DoubleNodeIterator implements Iterator<T> {
+    public class DoubleNodeIterator implements Iterator<T> {
         private DoubleNode<T> nextNode;
         private DoubleNode<T> lastReturned;
         private final DoubleNode<T> headNode;
