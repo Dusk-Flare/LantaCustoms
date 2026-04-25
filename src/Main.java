@@ -4,13 +4,13 @@ public class Main {
     public static void main(String[] args) {
         DoublyLinkedList<Double> list = new DoublyLinkedList<>();
         System.out.println("Adding");
-        list.addFirst(2.0);
-        list.addFirst(3.0);
-        list.addFirst(4.0);
-        list.addLast(0.0);
+        list.append(2.0);
+        list.append(3.0);
+        list.append(4.0);
+        list.add(0.0);
         list.print();
         System.out.println("Removing");
-        list.addLast(3.0);
+        list.add(3.0);
         list.print();
         list.remove(3.0);
         list.print();

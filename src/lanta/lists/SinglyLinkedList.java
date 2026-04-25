@@ -3,22 +3,18 @@ package lanta.lists;
 import java.util.*;
 import java.util.function.Predicate;
 
-/**
- * Custom version of {@code LinkedList} created to help me study Data Structure
- * @param <T> This represents the type of data used within the List
- */
-public class CustomLinkedList<T> extends AbstractCollection<T> implements Iterable<T> {
-    CustomNode<T> headNode;
+public class SinglyLinkedList<T> extends AbstractCollection<T> implements Iterable<T> {
+    SinglyNode<T> headNode;
 
-    public CustomLinkedList() {
+    public SinglyLinkedList() {
 
     }
 
-    public CustomLinkedList(Collection<? extends T> collection) {
+    public SinglyLinkedList(Collection<? extends T> collection) {
         addAll(collection);
     }
 
-    public CustomLinkedList(T[] array) {
+    public SinglyLinkedList(T[] array) {
         addAll(array);
     }
 
@@ -27,8 +23,8 @@ public class CustomLinkedList<T> extends AbstractCollection<T> implements Iterab
         return new CustomNodeIterator();
     }
 
-    public CustomLinkedList<T> copy(){
-        return new CustomLinkedList<>(this);
+    public SinglyLinkedList<T> copy(){
+        return new SinglyLinkedList<>(this);
     }
 
     public int size(){
@@ -63,14 +59,46 @@ public class CustomLinkedList<T> extends AbstractCollection<T> implements Iterab
     }
 
     public boolean add(T data){
-        CustomNode<T> newNode = new CustomNode<>(data);
+        SinglyNode<T> newNode = new SinglyNode<>(data);
         if(headNode == null) headNode = newNode;
         else {
-            for(CustomNode<T> cn = headNode; cn != null; cn = cn.next()){
+            for(SinglyNode<T> cn = headNode; cn != null; cn = cn.next()){
                 if(cn.next() == null){
                     cn.next(newNode);
                     return true;
                 }
+            }
+        }
+        return false;
+    }
+
+    public boolean compareAddAfter(T data, Predicate<T> condition){
+        SinglyNode<T> newNode = new SinglyNode<>(data);
+        if(headNode == null) headNode = newNode;
+        else {
+            for(SinglyNode<T> cn = headNode; cn != null; cn = cn.next()){
+                if(cn.test(condition)){
+                    newNode.next(cn.next());
+                    cn.next(newNode);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean compareAddBefore(T data, Predicate<T> condition){
+        SinglyNode<T> newNode = new SinglyNode<>(data);
+        SinglyNode<T> previous = null;
+        if(headNode == null) headNode = newNode;
+        else {
+            for(SinglyNode<T> cn = headNode; cn != null; cn = cn.next()){
+                if(cn.test(condition)){
+                    if(previous != null) previous.next(newNode);
+                    newNode.next(cn);
+                    return true;
+                }
+                previous = cn;
             }
         }
         return false;
@@ -94,8 +122,8 @@ public class CustomLinkedList<T> extends AbstractCollection<T> implements Iterab
     }
 
     public void fixCycle(){
-        CustomNode<T> slow = headNode;
-        CustomNode<T> fast = headNode;
+        SinglyNode<T> slow = headNode;
+        SinglyNode<T> fast = headNode;
         while( fast != null && fast.next() != null){
             fast = fast.next().next();
             slow = slow.next();
@@ -108,7 +136,7 @@ public class CustomLinkedList<T> extends AbstractCollection<T> implements Iterab
             fast = fast.next();
         }
 
-        CustomNode<T> cycleBreaker = slow;
+        SinglyNode<T> cycleBreaker = slow;
         while (cycleBreaker.next() != fast){
             cycleBreaker = cycleBreaker.next();
         }
@@ -124,29 +152,29 @@ public class CustomLinkedList<T> extends AbstractCollection<T> implements Iterab
         return contains;
     }
 
-    public CustomLinkedList<T> search(T data){
+    public SinglyLinkedList<T> search(T data){
         return compareSearch(value -> Objects.equals(data, value));
     }
 
-    public CustomLinkedList<T> compareSearch(Predicate<T> condition){
-        CustomLinkedList<T> result = new CustomLinkedList<>();
+    public SinglyLinkedList<T> compareSearch(Predicate<T> condition){
+        SinglyLinkedList<T> result = new SinglyLinkedList<>();
         for(T value : this){
             if(condition.test(value)) result.add(value);
         }
         return result;
     }
 
-    public CustomLinkedList<T> intersect(CustomLinkedList<T> list){
-        CustomLinkedList<T> intersection = new CustomLinkedList<>();
+    public SinglyLinkedList<T> intersect(SinglyLinkedList<T> list){
+        SinglyLinkedList<T> intersection = new SinglyLinkedList<>();
         for(T data : this){
             intersection.add(list.search(data).pop());
         }
         return intersection;
     }
 
-    boolean deleteNode(CustomNode<T> node){
-        CustomNode<T> previous = headNode;
-        for(CustomNode<T> cn = headNode; cn != null; cn = cn.next()){
+    boolean deleteNode(SinglyNode<T> node){
+        SinglyNode<T> previous = headNode;
+        for(SinglyNode<T> cn = headNode; cn != null; cn = cn.next()){
             if(cn.equals(node)){
                 previous.next(cn.next());
                 return true;
@@ -167,8 +195,8 @@ public class CustomLinkedList<T> extends AbstractCollection<T> implements Iterab
             pop();
             return true;
         }
-        CustomNode<T> previous = headNode;
-        for(CustomNode<T> cn = headNode; cn != null; cn = cn.next()){
+        SinglyNode<T> previous = headNode;
+        for(SinglyNode<T> cn = headNode; cn != null; cn = cn.next()){
             if(cn.test(condition)){
                 previous.next(cn.next());
                 return true;
@@ -185,8 +213,8 @@ public class CustomLinkedList<T> extends AbstractCollection<T> implements Iterab
     public T compareExtract(Predicate<T> condition){
         if(headNode == null) return null;
         if (headNode.test(condition)) return pop();
-        CustomNode<T> previous = headNode;
-        for(CustomNode<T> cn = headNode; cn != null; cn = cn.next()){
+        SinglyNode<T> previous = headNode;
+        for(SinglyNode<T> cn = headNode; cn != null; cn = cn.next()){
             if(cn.test(condition)){
                 previous.next(cn.next());
                 return cn.value();
@@ -207,8 +235,8 @@ public class CustomLinkedList<T> extends AbstractCollection<T> implements Iterab
             pop();
             result = true;
         }
-        CustomNode<T> previous = headNode;
-        for(CustomNode<T> cn = headNode; cn != null; cn = cn.next()){
+        SinglyNode<T> previous = headNode;
+        for(SinglyNode<T> cn = headNode; cn != null; cn = cn.next()){
             if(cn.test(condition)){
                 previous.next(cn.next());
                 cn = previous;
@@ -242,7 +270,7 @@ public class CustomLinkedList<T> extends AbstractCollection<T> implements Iterab
         StringBuilder str = new StringBuilder();
         str.append("[");
         if(headNode == null) str.append("]");
-        for(CustomNode<T> cn = headNode; cn != null; cn = cn.next()){
+        for(SinglyNode<T> cn = headNode; cn != null; cn = cn.next()){
             str.append(cn);
             str.append(cn.next() != null ? ", " : "]");
         }
@@ -253,7 +281,7 @@ public class CustomLinkedList<T> extends AbstractCollection<T> implements Iterab
     public boolean equals(Object o){
         if(this == o) return true;
         if(o == null || (getClass() != o.getClass())) return super.equals(o);
-        CustomLinkedList<?> newList = (CustomLinkedList<?>) o;
+        SinglyLinkedList<?> newList = (SinglyLinkedList<?>) o;
         Iterator<T> thisIterator = iterator();
         Iterator<?> otherIterator = newList.iterator();
 
@@ -272,9 +300,9 @@ public class CustomLinkedList<T> extends AbstractCollection<T> implements Iterab
     }
 
     class CustomNodeIterator implements Iterator<T> {
-        private CustomNode<T> nextNode;
-        private CustomNode<T> currentNode;
-        private CustomNode<T> lastNode;
+        private SinglyNode<T> nextNode;
+        private SinglyNode<T> currentNode;
+        private SinglyNode<T> lastNode;
         CustomNodeIterator(){
             nextNode = headNode;
         }

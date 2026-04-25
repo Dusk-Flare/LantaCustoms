@@ -3,13 +3,9 @@ package lanta.lists;
 import java.util.*;
 import java.util.function.Predicate;
 
-/**
- * Custom version of {@code LinkedList} created to help me study Data Structure
- * @param <T> This represents the type of data used within the List
- */
-public class DoublyLinkedList<T> extends AbstractCollection<T> implements Iterable<T> {
-    DoubleNode<T> headNode;
-    DoubleNode<T> leadNode;
+public class DoublyLinkedList<T> extends SinglyLinkedList<T> {
+    DoublyNode<T> headNode;
+    DoublyNode<T> leadNode;
 
     public DoublyLinkedList() {
 
@@ -28,37 +24,17 @@ public class DoublyLinkedList<T> extends AbstractCollection<T> implements Iterab
         return new DoubleNodeIterator(this);
     }
 
+    @Override
     public DoublyLinkedList<T> copy(){
         return new DoublyLinkedList<>(this);
     }
 
-    public int size(){
-        int size = 0;
-        for(T _ : this){
-            size++;
-        }
-        return size;
-    }
-
+    @Override
     public boolean isEmpty(){
-        return headNode == null;
+        return headNode == null && leadNode == null;
     }
 
-    public T pop(){
-        if(headNode == null) return null;
-        T element = headNode.value();
-        headNode = headNode.next();
-        return element;
-    }
-
-    public T peek(){
-        return headNode.value();
-    }
-
-    public void print(){
-        System.out.println(this);
-    }
-
+    @Override
     public void clear(){
         this.headNode = null;
         this.leadNode = null;
@@ -68,16 +44,17 @@ public class DoublyLinkedList<T> extends AbstractCollection<T> implements Iterab
         DoublyLinkedList<T> tempList = new DoublyLinkedList<>(this);
         DoublyLinkedList<T> reversed = new DoublyLinkedList<>();
         while(!tempList.isEmpty()){
-            reversed.addFirst(tempList.pop());
+            reversed.append(tempList.pop());
         }
         return reversed;
     }
 
+    @Override
     public boolean compareAddAfter(T data, Predicate<T> condition){
-        DoubleNode<T> newNode = new DoubleNode<>(data);
+        DoublyNode<T> newNode = new DoublyNode<>(data);
         if(headNode == null) headNode = newNode;
         else {
-            for(DoubleNode<T> cn = headNode; cn != null; cn = cn.next()){
+            for(DoublyNode<T> cn = headNode; cn != null; cn = cn.next()){
                 if(cn.test(condition)){
                     newNode.next(cn.next());
                     cn.next(newNode);
@@ -89,11 +66,12 @@ public class DoublyLinkedList<T> extends AbstractCollection<T> implements Iterab
         return false;
     }
 
+    @Override
     public boolean compareAddBefore(T data, Predicate<T> condition){
-        DoubleNode<T> newNode = new DoubleNode<>(data);
+        DoublyNode<T> newNode = new DoublyNode<>(data);
         if(headNode == null) headNode = newNode;
         else {
-            for(DoubleNode<T> cn = leadNode; cn != null; cn = cn.previous()){
+            for(DoublyNode<T> cn = leadNode; cn != null; cn = cn.previous()){
                 if(cn.test(condition)){
                     newNode.previous(cn.previous());
                     cn.previous(newNode);
@@ -105,9 +83,10 @@ public class DoublyLinkedList<T> extends AbstractCollection<T> implements Iterab
         return false;
     }
 
-    public boolean addLast(T data){
-        DoubleNode<T> newNode = new DoubleNode<>(data);
-        if(headNode == null) return addFirst(data);
+    @Override
+    public boolean add(T data){
+        DoublyNode<T> newNode = new DoublyNode<>(data);
+        if(headNode == null) return append(data);
         if(leadNode == null && headNode.next() != null) leadNode = headNode.next();
         else if (leadNode == null) {
             headNode.next(newNode);
@@ -121,8 +100,8 @@ public class DoublyLinkedList<T> extends AbstractCollection<T> implements Iterab
         return false;
     }
 
-    public boolean addFirst(T data){
-        DoubleNode<T> newNode = new DoubleNode<>(data);
+    public boolean append(T data){
+        DoublyNode<T> newNode = new DoublyNode<>(data);
         if(leadNode == null && headNode != null) leadNode = headNode.next();
         if(headNode == null) headNode = newNode;
         else {
@@ -133,54 +112,6 @@ public class DoublyLinkedList<T> extends AbstractCollection<T> implements Iterab
         return false;
     }
 
-    @Override
-    public boolean addAll(Collection<? extends T> collection){
-        boolean hasAdded = true;
-        for(T data : collection){
-            hasAdded &= addLast(data);
-        }
-        return hasAdded;
-    }
-
-    public boolean addAll(T[] array){
-        boolean hasAdded = true;
-        for(T data : array){
-            hasAdded &= addLast(data);
-        }
-        return hasAdded;
-    }
-
-    public void fixCycle(){
-        DoubleNode<T> slow = headNode;
-        DoubleNode<T> fast = headNode;
-        while( fast != null && fast.next() != null){
-            fast = fast.next().next();
-            slow = slow.next();
-            if(slow == fast) break;
-        }
-        if(fast == null || fast.next() == null) return;
-        slow = headNode;
-        while (slow != fast){
-            slow = slow.next();
-            fast = fast.next();
-        }
-
-        DoubleNode<T> cycleBreaker = slow;
-        while (cycleBreaker.next() != fast){
-            cycleBreaker = cycleBreaker.next();
-        }
-        cycleBreaker.next(null);
-    }
-
-    @Override
-    public boolean contains(Object data){
-        boolean contains = false;
-        for(T value : this){
-            contains |= Objects.equals(data, value);
-        }
-        return contains;
-    }
-
     public DoublyLinkedList<T> search(T data){
         return compareSearch(value -> Objects.equals(data, value));
     }
@@ -188,7 +119,7 @@ public class DoublyLinkedList<T> extends AbstractCollection<T> implements Iterab
     public DoublyLinkedList<T> compareSearch(Predicate<T> condition){
         DoublyLinkedList<T> result = new DoublyLinkedList<>();
         for(T value : this){
-            if(condition.test(value)) result.addLast(value);
+            if(condition.test(value)) result.add(value);
         }
         return result;
     }
@@ -196,14 +127,19 @@ public class DoublyLinkedList<T> extends AbstractCollection<T> implements Iterab
     public DoublyLinkedList<T> intersect(DoublyLinkedList<T> list){
         DoublyLinkedList<T> intersection = new DoublyLinkedList<>();
         for(T data : this){
-            intersection.addLast(list.search(data).pop());
+            intersection.add(list.search(data).pop());
         }
         return intersection;
     }
 
-    boolean deleteNode(DoubleNode<T> node){
-        DoubleNode<T> previous = headNode;
-        for(DoubleNode<T> cn = headNode; cn != null; cn = cn.next()){
+    @Override
+    boolean deleteNode(SinglyNode<T> node){
+        return false;
+    }
+
+    boolean deleteNode(DoublyNode<T> node){
+        DoublyNode<T> previous = headNode;
+        for(DoublyNode<T> cn = headNode; cn != null; cn = cn.next()){
             if(cn.equals(node)){
                 previous.next(cn.next());
                 if(cn.next() != null) cn.next().previous(previous);
@@ -215,18 +151,14 @@ public class DoublyLinkedList<T> extends AbstractCollection<T> implements Iterab
     }
 
     @Override
-    public boolean remove(Object data){
-        return compareRemove(value -> Objects.equals(data, value));
-    }
-
     public boolean compareRemove(Predicate<T> condition){
         if(headNode == null) return false;
         if (headNode.test(condition)) {
             pop();
             return true;
         }
-        DoubleNode<T> previous = headNode;
-        for(DoubleNode<T> cn = headNode; cn != null; cn = cn.next()){
+        DoublyNode<T> previous = headNode;
+        for(DoublyNode<T> cn = headNode; cn != null; cn = cn.next()){
             if(cn.test(condition)){
                 previous.next(cn.next());
                 if(cn.next() != null) cn.next().previous(previous);
@@ -237,15 +169,12 @@ public class DoublyLinkedList<T> extends AbstractCollection<T> implements Iterab
         return false;
     }
 
-    public T extract(T data){
-        return compareExtract(value -> Objects.equals(data, value));
-    }
-
+    @Override
     public T compareExtract(Predicate<T> condition){
         if(headNode == null) return null;
         if (headNode.test(condition)) return pop();
-        DoubleNode<T> previous = headNode;
-        for(DoubleNode<T> cn = headNode; cn != null; cn = cn.next()){
+        DoublyNode<T> previous = headNode;
+        for(DoublyNode<T> cn = headNode; cn != null; cn = cn.next()){
             if(cn.test(condition)){
                 previous.next(cn.next());
                 if(cn.next() != null) cn.next().previous(previous);
@@ -256,10 +185,7 @@ public class DoublyLinkedList<T> extends AbstractCollection<T> implements Iterab
         return null;
     }
 
-    public boolean deleteAllOf(T data){
-        return compareDeleteAllOf(value -> Objects.equals(data, value));
-    }
-
+    @Override
     public boolean compareDeleteAllOf(Predicate<T> condition){
         boolean result = false;
         if(headNode == null) return false;
@@ -267,8 +193,8 @@ public class DoublyLinkedList<T> extends AbstractCollection<T> implements Iterab
             pop();
             result = true;
         }
-        DoubleNode<T> previous = headNode;
-        for(DoubleNode<T> cn = headNode; cn != null; cn = cn.next()){
+        DoublyNode<T> previous = headNode;
+        for(DoublyNode<T> cn = headNode; cn != null; cn = cn.next()){
             if(cn.test(condition)){
                 previous.next(cn.next());
                 if(cn.next() != null) cn.next().previous(previous);
@@ -280,30 +206,12 @@ public class DoublyLinkedList<T> extends AbstractCollection<T> implements Iterab
         return result;
     }
 
-    public void removeDuplicates(){
-        for(T value : this){
-            if(this.search(value).size() != 1) extract(value);
-        }
-    }
-
-    @Override
-    public boolean retainAll(Collection<?> collection) {
-        Objects.requireNonNull(collection);
-        boolean modified = false;
-        for(T data : this){
-            if(!collection.contains(data)){
-                modified |= deleteAllOf(data);
-            }
-        }
-        return modified;
-    }
-
     @Override
     public String toString(){
         StringBuilder str = new StringBuilder();
         str.append("[");
         if(headNode == null) str.append("]");
-        for(DoubleNode<T> cn = headNode; cn != null; cn = cn.next()){
+        for(DoublyNode<T> cn = headNode; cn != null; cn = cn.next()){
             str.append(cn);
             str.append(cn.next() != null ? ", " : "]");
         }
@@ -325,21 +233,12 @@ public class DoublyLinkedList<T> extends AbstractCollection<T> implements Iterab
         return true;
     }
 
-    @Override
-    public int hashCode(){
-        int hash = getClass().hashCode();
-        for(T element : this) hash = 31 * hash + Objects.hashCode(element);
-        return hash;
-    }
-
-    public class DoubleNodeIterator implements Iterator<T> {
-        private DoubleNode<T> nextNode;
-        private DoubleNode<T> lastReturned;
-        private final DoubleNode<T> headNode;
-        private final DoubleNode<T> tailNode;
+    public class DoubleNodeIterator extends CustomNodeIterator {
+        private DoublyNode<T> nextNode;
+        private DoublyNode<T> lastReturned;
+        private final DoublyNode<T> tailNode;
 
         DoubleNodeIterator(DoublyLinkedList<T> list) {
-            this.headNode = list.headNode;
             this.tailNode = list.leadNode;
             this.nextNode = list.headNode;
             this.lastReturned = null;
@@ -385,6 +284,7 @@ public class DoublyLinkedList<T> extends AbstractCollection<T> implements Iterab
             lastReturned = null;
         }
 
+        @Override
         public void removeIf(Predicate<T> condition) {
             if (lastReturned == null) return;
             if (lastReturned.test(condition)) {

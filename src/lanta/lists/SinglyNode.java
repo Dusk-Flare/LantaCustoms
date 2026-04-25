@@ -3,10 +3,10 @@ package lanta.lists;
 import java.util.Objects;
 import java.util.function.Predicate;
 
-class CustomNode<T> {
+class SinglyNode<T> {
     private final T DATA;
-    private CustomNode<T> nextNode;
-    public CustomNode(T DATA){
+    private SinglyNode<T> nextNode;
+    public SinglyNode(T DATA){
         this.DATA = DATA;
         nextNode = null;
     }
@@ -15,11 +15,11 @@ class CustomNode<T> {
         return DATA;
     }
 
-    public void next(CustomNode<T> node){
+    public void next(SinglyNode<T> node){
         nextNode = node;
     }
 
-    public CustomNode<T> next(){
+    public SinglyNode<T> next(){
         return nextNode;
     }
 
