@@ -3,11 +3,10 @@ package lanta.lists;
 import java.util.*;
 import java.util.function.Predicate;
 
-public class SinglyLinkedList<T> extends AbstractCollection<T> implements Iterable<T> {
+public class SinglyLinkedList<T> extends AbstractCollection<T> {
     SinglyNode<T> headNode;
 
     public SinglyLinkedList() {
-
     }
 
     public SinglyLinkedList(Collection<? extends T> collection) {
@@ -20,7 +19,11 @@ public class SinglyLinkedList<T> extends AbstractCollection<T> implements Iterab
 
     @Override
     public Iterator<T> iterator() {
-        return new CustomNodeIterator();
+        return new SinglyNodeIterator();
+    }
+
+    public SinglyNodeIterator SinglyIterator() {
+        return new SinglyNodeIterator();
     }
 
     public SinglyLinkedList<T> copy(){
@@ -172,7 +175,24 @@ public class SinglyLinkedList<T> extends AbstractCollection<T> implements Iterab
         return intersection;
     }
 
-    boolean deleteNode(SinglyNode<T> node){
+    @Override
+    public boolean retainAll(Collection<?> collection) {
+        Objects.requireNonNull(collection);
+        boolean modified = false;
+        for(T data : this){
+            if(!collection.contains(data)){
+                modified |= removeAllOf(data);
+            }
+        }
+        return modified;
+    }
+
+    boolean removeNode(SinglyNode<T> node){
+        if (headNode == null) return false;
+        if (headNode.equals(node)) {
+            pop();
+            return true;
+        }
         SinglyNode<T> previous = headNode;
         for(SinglyNode<T> cn = headNode; cn != null; cn = cn.next()){
             if(cn.equals(node)){
@@ -206,11 +226,7 @@ public class SinglyLinkedList<T> extends AbstractCollection<T> implements Iterab
         return false;
     }
 
-    public T extract(T data){
-        return compareExtract(value -> Objects.equals(data, value));
-    }
-
-    public T compareExtract(Predicate<T> condition){
+    public T extract(Predicate<T> condition){
         if(headNode == null) return null;
         if (headNode.test(condition)) return pop();
         SinglyNode<T> previous = headNode;
@@ -224,11 +240,11 @@ public class SinglyLinkedList<T> extends AbstractCollection<T> implements Iterab
         return null;
     }
 
-    public boolean deleteAllOf(T data){
-        return compareDeleteAllOf(value -> Objects.equals(data, value));
+    public boolean removeAllOf(T data){
+        return compareRemoveAllOf(value -> Objects.equals(data, value));
     }
 
-    public boolean compareDeleteAllOf(Predicate<T> condition){
+    public boolean compareRemoveAllOf(Predicate<T> condition){
         boolean result = false;
         if(headNode == null) return false;
         while (headNode.test(condition)){
@@ -249,20 +265,8 @@ public class SinglyLinkedList<T> extends AbstractCollection<T> implements Iterab
 
     public void removeDuplicates(){
         for(T value : this){
-            if(this.search(value).size() != 1) extract(value);
+            if(this.search(value).size() != 1) remove(value);
         }
-    }
-
-    @Override
-    public boolean retainAll(Collection<?> collection) {
-        Objects.requireNonNull(collection);
-        boolean modified = false;
-        for(T data : this){
-            if(!collection.contains(data)){
-                modified |= deleteAllOf(data);
-            }
-        }
-        return modified;
     }
 
     @Override
@@ -299,11 +303,10 @@ public class SinglyLinkedList<T> extends AbstractCollection<T> implements Iterab
         return hash;
     }
 
-    class CustomNodeIterator implements Iterator<T> {
+    public class SinglyNodeIterator implements Iterator<T> {
         private SinglyNode<T> nextNode;
-        private SinglyNode<T> currentNode;
-        private SinglyNode<T> lastNode;
-        CustomNodeIterator(){
+        private SinglyNode<T> lastReturned;
+        SinglyNodeIterator(){
             nextNode = headNode;
         }
 
@@ -314,21 +317,21 @@ public class SinglyLinkedList<T> extends AbstractCollection<T> implements Iterab
 
         @Override
         public T next() {
-            if (nextNode == null) throw new NoSuchElementException();
-            lastNode = currentNode;
-            currentNode = nextNode;
+            if (!hasNext()) throw new NoSuchElementException();
+            lastReturned = nextNode;
             nextNode = nextNode.next();
-            return currentNode.value();
+            return lastReturned.value();
         }
 
         @Override
         public void remove() {
-            if(deleteNode(currentNode)) currentNode = lastNode;
+            if(lastReturned == null) throw new IllegalStateException();
+            removeIf(_ -> true);
         }
 
         public void removeIf(Predicate<T> condition){
-            if(!currentNode.test(condition)) return;
-            remove();
+            if(lastReturned == null) throw new IllegalStateException();
+            if(lastReturned.test(condition) && removeNode(lastReturned)) lastReturned = null;
         }
     }
 }

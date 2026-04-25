@@ -20,8 +20,12 @@ public class DoublyLinkedList<T> extends SinglyLinkedList<T> {
     }
 
     @Override
-    public DoubleNodeIterator iterator() {
-        return new DoubleNodeIterator(this);
+    public Iterator<T> iterator() {
+        return new DoublyNodeIterator(this);
+    }
+
+    public DoublyNodeIterator doublyIterator() {
+        return new DoublyNodeIterator(this);
     }
 
     @Override
@@ -133,11 +137,16 @@ public class DoublyLinkedList<T> extends SinglyLinkedList<T> {
     }
 
     @Override
-    boolean deleteNode(SinglyNode<T> node){
+    boolean removeNode(SinglyNode<T> node){
         return false;
     }
 
-    boolean deleteNode(DoublyNode<T> node){
+    boolean removeNode(DoublyNode<T> node){
+        if (headNode == null) return false;
+        if (headNode.equals(node)) {
+            pop();
+            return true;
+        }
         DoublyNode<T> previous = headNode;
         for(DoublyNode<T> cn = headNode; cn != null; cn = cn.next()){
             if(cn.equals(node)){
@@ -170,7 +179,7 @@ public class DoublyLinkedList<T> extends SinglyLinkedList<T> {
     }
 
     @Override
-    public T compareExtract(Predicate<T> condition){
+    public T extract(Predicate<T> condition){
         if(headNode == null) return null;
         if (headNode.test(condition)) return pop();
         DoublyNode<T> previous = headNode;
@@ -186,7 +195,7 @@ public class DoublyLinkedList<T> extends SinglyLinkedList<T> {
     }
 
     @Override
-    public boolean compareDeleteAllOf(Predicate<T> condition){
+    public boolean compareRemoveAllOf(Predicate<T> condition){
         boolean result = false;
         if(headNode == null) return false;
         while (headNode.test(condition)){
@@ -233,12 +242,12 @@ public class DoublyLinkedList<T> extends SinglyLinkedList<T> {
         return true;
     }
 
-    public class DoubleNodeIterator extends CustomNodeIterator {
+    public class DoublyNodeIterator implements Iterator<T> {
         private DoublyNode<T> nextNode;
         private DoublyNode<T> lastReturned;
         private final DoublyNode<T> tailNode;
 
-        DoubleNodeIterator(DoublyLinkedList<T> list) {
+        DoublyNodeIterator(DoublyLinkedList<T> list) {
             this.tailNode = list.leadNode;
             this.nextNode = list.headNode;
             this.lastReturned = null;
@@ -276,20 +285,13 @@ public class DoublyLinkedList<T> extends SinglyLinkedList<T> {
 
         @Override
         public void remove() {
-            if (lastReturned == null) throw new IllegalStateException();
-            deleteNode(lastReturned);
-            if (lastReturned == nextNode) {
-                nextNode = nextNode != null ? nextNode.next() : null;
-            }
-            lastReturned = null;
+            if(lastReturned == null) throw new IllegalStateException();
+            removeIf(_ -> true);
         }
 
-        @Override
-        public void removeIf(Predicate<T> condition) {
-            if (lastReturned == null) return;
-            if (lastReturned.test(condition)) {
-                remove();
-            }
+        public void removeIf(Predicate<T> condition){
+            if(lastReturned == null) throw new IllegalStateException();
+            if(lastReturned.test(condition) && removeNode(lastReturned)) lastReturned = null;
         }
     }
 }

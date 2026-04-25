@@ -5,7 +5,9 @@ import java.io.StringWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-
+/**
+ * The LantaLogger class is a simple logger that registers messages and errors into the console, and keeps track of them.
+ */
 public class LantaLogger {
     private int logID;
     private int errors;
@@ -13,11 +15,11 @@ public class LantaLogger {
     private final boolean isDiscrete;
     private final ArrayList<String> fullLog;
 
-    /**
-     * The LantaLogger class is a simple logger that registers messages and errors into the console, and keeps track of them.
-     *
+     /**
+      * Constructs a logger that contains the id owner and may log onto the console if isDiscrete is false
+      *
      * @param owner This parameter represents the specific class this logger is supposed to log under.
-     * @param isDiscrete This boolean dictates weather or not the logger will imediatelly print out the logged message upon call.
+     * @param isDiscrete This boolean dictates weather or not the logger will immediately print out the logged message upon call.
      */
     public LantaLogger(Class<?> owner, boolean isDiscrete) {
         loggerID = owner.getSimpleName();
@@ -27,6 +29,11 @@ public class LantaLogger {
         this.isDiscrete = isDiscrete;
     }
 
+    /**
+     * Constructs a logger that contains the id owner and logs directly onto the console
+     *
+     * @param owner This parameter represents the specific class this logger is supposed to log under.
+     */
     public LantaLogger(Class<?> owner) {
         this(owner, false);
     }
