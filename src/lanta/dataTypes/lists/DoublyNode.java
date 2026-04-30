@@ -1,4 +1,4 @@
-package lanta.lists;
+package lanta.dataTypes.lists;
 
 class DoublyNode<T> extends SinglyNode<T> {
     private DoublyNode<T> prevNode;

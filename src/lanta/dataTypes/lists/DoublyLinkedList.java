@@ -1,4 +1,4 @@
-package lanta.lists;
+package lanta.dataTypes.lists;
 
 import java.util.*;
 import java.util.function.Predicate;

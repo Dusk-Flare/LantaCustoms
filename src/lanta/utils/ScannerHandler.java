@@ -84,4 +84,8 @@ public class ScannerHandler {
         return scanNumber(converter, defaultsTo);
 
     }
+
+    public static Scanner getScanner() {
+        return scanner;
+    }
 }

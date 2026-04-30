@@ -1,4 +1,4 @@
-package lanta.lists;
+package lanta.dataTypes.lists;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -50,7 +50,14 @@ public class SinglyLinkedList<T> extends AbstractCollection<T> {
     }
 
     public T peek(){
+        if(headNode == null) return null;
         return headNode.value();
+    }
+
+    public void push(T data){
+        SinglyNode<T> newHead = new SinglyNode<>(data);
+        newHead.next(headNode);
+        headNode = newHead;
     }
 
     public void print(){
