@@ -3,10 +3,11 @@ package lanta.math;
 public class LinearEquations {
     public static <T extends Number> Matrix<T> gaussSeidel(Matrix<T> matrix, Matrix<T> results, Matrix<T> initialValues, double precision) {
         if (!matrix.isSquare()) throw new IllegalArgumentException("Matrix must be square");
-        if (matrix.rows != initialValues.rows || initialValues.columns != 1) throw new IllegalArgumentException("Initial values size must match matrix in rows, and only have 1 column");
-        if (matrix.rows != results.rows || results.columns != 1) throw new IllegalArgumentException("Results size must match matrix in rows, and only have 1 column");
+        if (matrix.columns != initialValues.columns || initialValues.rows != 1) throw new IllegalArgumentException("Initial values size must match matrix in rows, and only have 1 column");
+        if (matrix.columns != results.columns || results.rows != 1) throw new IllegalArgumentException("Results size must match matrix in rows, and only have 1 column");
         int size = matrix.rows;
         Matrix<T> values = new Matrix<>(initialValues);
+        System.out.println(values+"\n\n"+initialValues);
         while (true) {
             Matrix<T> nextValues = updateValues(matrix, results, values, size);
             boolean isFinished = true;

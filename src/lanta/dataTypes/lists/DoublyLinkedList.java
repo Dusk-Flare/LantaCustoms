@@ -44,6 +44,12 @@ public class DoublyLinkedList<T> extends SinglyLinkedList<T> {
         this.leadNode = null;
     }
 
+    @Override
+    public T front(){
+        if (leadNode == null) return null;
+        return leadNode.value();
+    }
+
     public DoublyLinkedList<T> reverse(){
         DoublyLinkedList<T> tempList = new DoublyLinkedList<>(this);
         DoublyLinkedList<T> reversed = new DoublyLinkedList<>();

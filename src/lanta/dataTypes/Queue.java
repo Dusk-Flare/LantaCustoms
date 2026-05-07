@@ -2,10 +2,10 @@ package lanta.dataTypes;
 
 import lanta.dataTypes.lists.SinglyLinkedList;
 
-public class Stack<T> {
-    SinglyLinkedList<T> stack;
-    public Stack(){
-        stack = new SinglyLinkedList<>();
+public class Queue<T> {
+    SinglyLinkedList<T> queue;
+    public Queue(){
+        queue = new SinglyLinkedList<>();
     }
 
     public boolean isEmpty(){
@@ -13,23 +13,23 @@ public class Stack<T> {
     }
 
     public int size(){
-        return stack.size();
+        return queue.size();
     }
 
-    public T pop(){
-        return stack.pop();
+    public T poll(){
+        return queue.poll();
     }
 
     public T peek(){
-        return stack.peek();
+        return queue.front();
     }
 
     public void push(T data){
-        stack.push(data);
+        queue.push(data);
     }
 
     @Override
     public String toString(){
-        return stack.toString();
+        return queue.toString();
     }
 }
